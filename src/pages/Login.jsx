@@ -19,11 +19,11 @@ async function signChallenge(privateKeyPem, challenge) {
   if (!privateKeyPem) throw new Error("Private key is empty");
 
   try {
- 
+
     const pemContents = privateKeyPem
       .replace(/-----BEGIN PRIVATE KEY-----/, "")
       .replace(/-----END PRIVATE KEY-----/, "")
-      .replace(/\r?\n|\r/g, ""); 
+      .replace(/\r?\n|\r/g, "");
 
     const binaryDer = Uint8Array.from(atob(pemContents), (c) =>
       c.charCodeAt(0)
@@ -55,16 +55,22 @@ async function signChallenge(privateKeyPem, challenge) {
 
 
 export default function Login() {
-  const [form, setForm] = useState({ email: "", privateKey: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    privateKey: ""
+  });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const baseURL = import.meta.env.VITE_APP_URL;
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const getChallenge = async () => {
-    const res = await axios.get("http://localhost:5000/get-challenge", {
-      withCredentials: true, 
+    const res = await axios.get(`${baseURL}/get-challenge`, {
+      withCredentials: true,
     });
     return res.data.challenge;
   };
@@ -82,11 +88,18 @@ export default function Login() {
       const signedChallenge = await signChallenge(form.privateKey, challenge);
 
       const res = await axios.post(
-        "http://localhost:5000/api/v1/user/login",
-        { email: form.email, signedChallenge },
+        `${baseURL}/api/v1/user/login`,
+        {
+          email: form.email,
+          password: form.password,
+          signedChallenge
+        },
         { withCredentials: true }
       );
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("privateKey", form.privateKey);
+      localStorage.setItem("email", form.email);
+
       navigate("/");
     } catch (err) {
       console.error(err);
@@ -122,6 +135,16 @@ export default function Login() {
             name="email"
             type="email"
             value={form.email}
+            onChange={handleChange}
+            required
+            fullWidth
+            sx={{ mb: 3 }}
+          />
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            value={form.password}
             onChange={handleChange}
             required
             fullWidth

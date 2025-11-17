@@ -19,6 +19,8 @@ export default function Signup() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  const baseURL = import.meta.env.VITE_APP_URL;
+
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const handleSignup = async (e) => {
@@ -26,7 +28,7 @@ export default function Signup() {
     setError("")
     setIsLoading(true)
     try {
-      const res = await axios.post("http://localhost:5000/api/v1/user/signup", form)
+      const res = await axios.post(`${baseURL}/api/v1/user/signup`, form)
       setPrivateKey(res.data.privateKey)
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed")
